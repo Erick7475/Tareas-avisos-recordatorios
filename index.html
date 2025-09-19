@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contadores y Tareas</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        :root {
+            --primary-color: #5b7bff;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --low-priority: #3498db;
+            --medium-priority: #f1c40f;
+            --high-priority: #e74c3c;
+            --bg-color-start: #78a2eb; /* Celeste más fuerte */
+            --bg-color-end: #ff66b2; /* Fucsia más fuerte */
+            --card-bg: #ffffff;
+            --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-color-start) 0%, var(--bg-color-end) 100%);
+            margin: 0;
+            padding: 40px 20px;
+            color: var(--secondary-color);
+            text-align: center;
+        }
+
+        .header {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
+        #create-button, #create-task-button, #config-button {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            border-radius: 50px;
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, background-color 0.2s;
+            margin: 10px;
+        }
+
+        #create-button:hover, #create-task-button:hover, #config-button:hover {
+            background-color: #4a6bff;
+            transform: translateY(-2px);
+        }
+
+        #create-button:active, #create-task-button:active, #config-button:active {
+            transform: translateY(0);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-top: 50px;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .box, .task-box {
+            position: relative;
+            width: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            box-sizing: border-box;
+            transition: transform 0.3s ease-in-out;
+            border-top: 8px solid;
+        }
+
+        .box:hover, .task-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .box {
+            justify-content: space-between;
+            height: 220px;
+        }
+
+        .delete-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+            line-height: 1;
+        }
+
+        .delete-button:hover {
+            background-color: #c0392b;
+        }
+
+        .box-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--secondary-color);
+        }
+
+        .count {
+            font-size: 3.5em;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin-top: auto;
+        }
+
+        .action-button {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            font-size: 2em;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .action-button:hover {
+            transform: scale(1.1);
+        }
+
+        .add-button { background-color: var(--success-color); }
+        .subtract-button { background-color: var(--danger-color); }
+
+        /* Estilos de las Tareas */
+        .task-box {
+            justify-content: space-between;
+            min-height: 180px;
+            background: linear-gradient(45deg, rgba(255,255,255,0.8), rgba(255,255,255,0.9));
+        }
+
+        .task-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-top: 20px;
+            word-break: break-word;
+            text-align: center;
+            color: var(--secondary-color); /* Asegura que el color del texto sea visible */
+        }
+
+        .priority {
+            font-size: 0.9em;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            color: white;
+        }
+        .priority.high { background-color: var(--high-priority); }
+        .priority.medium { background-color: var(--medium-priority); color: var(--secondary-color); }
+        .priority.low { background-color: var(--low-priority); }
+
+        /* Estilos del modal de configuración */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            width: 90%;
+            max-width: 500px;
+            text-align: left;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .close-button:hover, .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        #notification-list {
+            margin-top: 20px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .notification-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        
+        .remove-time {
+            color: var(--danger-color);
+            cursor: pointer;
+            font-size: 1.5em;
+            line-height: 1;
+        }
+
+        /* Estilos para campos de formulario dentro del modal */
+        .modal-content input[type="time"],
+        .modal-content button {
+            margin-top: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1em;
+        }
+
+        .modal-content button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .modal-content button:hover {
+            background-color: #4a6bff;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            .section-title {
+                font-size: 1.5em;
+            }
+            #create-button, #create-task-button, #config-button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+            .box, .task-box {
+                width: 100%;
+                max-width: 250px;
+            }
+            .container {
+                gap: 20px;
+            }
+            .modal-content {
+                padding: 20px;
+            }
+            .modal-content input[type="time"],
+            .modal-content button {
+                width: 100%;
+                box-sizing: border-box;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Contadores y Tareas</h1>
+    </div>
+
+    <h2 class="section-title">Tus Contadores</h2>
+    <button id="create-button">Crear Nuevo Contador</button>
+    <div id="counter-container" class="container"></div>
+
+    <h2 class="section-title">Tus Tareas</h2>
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 20px;">
+        <button id="create-task-button">Crear Nueva Tarea</button>
+        <button id="config-button">Configurar Notificaciones</button>
+    </div>
+    <div id="task-container" class="container"></div>
+
+    <div id="config-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>Configurar Horas de Notificación</h3>
+            <p>Ingresa las horas en las que quieres recibir un recordatorio para revisar tus tareas.</p>
+            <input type="time" id="time-input">
+            <button id="add-time-button">Añadir Hora</button>
+            <ul id="notification-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const counterContainer = document.getElementById('counter-container');
+            const createButton = document.getElementById('create-button');
+            const taskContainer = document.getElementById('task-container');
+            const createTaskButton = document.getElementById('create-task-button');
+
+            const configButton = document.getElementById('config-button');
+            const configModal = document.getElementById('config-modal');
+            const closeModalButton = document.querySelector('.close-button');
+            const timeInput = document.getElementById('time-input');
+            const addTimeButton = document.getElementById('add-time-button');
+            const notificationList = document.getElementById('notification-list');
+
+            let nextCounterId = 0;
+            let nextTaskId = 0;
+            // No necesitamos notifiedTimes aquí, ya que el estado se maneja en localStorage dentro de checkNotifications
+            // let notifiedTimes = JSON.parse(localStorage.getItem('notifiedTimes')) || [];
+
+            // --- Funciones de Notificaciones ---
+            function requestNotificationPermission() {
+                if (!("Notification" in window)) {
+                    alert("Este navegador no soporta notificaciones.");
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission();
+                }
+            }
+
+            function sendNotification(title, body) {
+                if (Notification.permission === "granted") {
+                    new Notification(title, { body: body, icon: 'icon.png' });
+                    // Si tuvieras un sonido, lo reproducirías aquí:
+                    // notificationSound.play();
+                } else {
+                    console.log('Permiso de notificación no concedido.');
+                }
+            }
+            
+            // --- Funciones para Contadores ---
+            function getRandomColor() {
+                const colors = ['#5b7bff', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#3498db'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            function setupCounterEvents(box) {
+                const countElement = box.querySelector('.count');
+                const addBtn = box.querySelector('.add-button');
+                const subtractBtn = box.querySelector('.subtract-button');
+                const deleteBtn = box.querySelector('.delete-button');
+                const boxId = box.dataset.boxId;
+                
+                addBtn.addEventListener('click', () => {
+                    let currentCount = parseInt(countElement.textContent);
+                    currentCount += 1;
+                    countElement.textContent = currentCount;
+                    localStorage.setItem(`counter-count-${boxId}`, currentCount);
+                    // sendNotification('Contador Actualizado', `El contador "${box.querySelector('.box-title').textContent}" ahora es ${currentCount}.`); // Comentado para evitar spam de notificaciones en cada click
+                });
+
+                subtractBtn.addEventListener('click', () => {
+                    let currentCount = parseInt(countElement.textContent);
+                    if (currentCount > 0) {
+                        currentCount -= 1;
+                        countElement.textContent = currentCount;
+                        localStorage.setItem(`counter-count-${boxId}`, currentCount);
+                    }
+                });
+
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('¿Estás seguro de que quieres eliminar este contador?')) {
+                        localStorage.removeItem(`counter-count-${boxId}`);
+                        localStorage.removeItem(`counter-color-${boxId}`);
+                        localStorage.removeItem(`counter-name-${boxId}`);
+                        box.remove();
+                    }
+                });
+            }
+
+            function createNewCounter(boxId, count = 0, name = 'Registro', color = null) {
+                const newBox = document.createElement('div');
+                newBox.classList.add('box');
+                newBox.dataset.boxId = boxId;
+                const finalColor = color || getRandomColor();
+                
+                newBox.style.borderTopColor = finalColor;
+                
+                newBox.innerHTML = `
+                    <button class="delete-button">&times;</button>
+                    <span class="box-title">${name}</span>
+                    <span class="count" style="color: ${finalColor};">${count}</span>
+                    <div class="button-container">
+                        <button class="action-button subtract-button">-</button>
+                        <button class="action-button add-button">+</button>
+                    </div>
+                `;
+                counterContainer.appendChild(newBox);
+                setupCounterEvents(newBox);
+            }
+
+            function loadSavedCounters() {
+                const keys = Object.keys(localStorage).filter(key => key.startsWith('counter-count-'));
+                
+                keys.forEach(key => {
+                    const boxId = key.split('-')[2];
+                    const count = localStorage.getItem(key);
+                    const color = localStorage.getItem(`counter-color-${boxId}`);
+                    const name = localStorage.getItem(`counter-name-${boxId}`);
+                    createNewCounter(boxId, parseInt(count), name, color);
+                    nextCounterId = Math.max(nextCounterId, parseInt(boxId) + 1);
+                });
+            }
+
+            createButton.addEventListener('click', () => {
+                const newName = prompt('Ingresa un nombre para el nuevo contador:');
+                if (newName) {
+                    const newId = nextCounterId++;
+                    const newColor = getRandomColor();
+                    createNewCounter(newId, 0, newName, newColor);
+                    localStorage.setItem(`counter-count-${newId}`, 0);
+                    localStorage.setItem(`counter-name-${newId}`, newName);
+                    localStorage.setItem(`counter-color-${newId}`, newColor);
+                }
+            });
+
+            // --- Funciones para Tareas ---
+            function getPriorityColor(priority) {
+                switch (priority) {
+                    case 'alta': return '#e74c3c';
+                    case 'media': return '#f1c40f';
+                    case 'baja': return '#3498db';
+                    default: return '#5b7bff';
+                }
+            }
+
+            function getPriorityClass(priority) {
+                switch (priority) {
+                    case 'alta': return 'high';
+                    case 'media': return 'medium';
+                    case 'baja': return 'low';
+                    default: return '';
+                }
+            }
+
+            function setupTaskEvents(taskBox) {
+                const deleteBtn = taskBox.querySelector('.delete-button');
+                const taskId = taskBox.dataset.taskId;
+
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+                        localStorage.removeItem(`task-name-${taskId}`);
+                        localStorage.removeItem(`task-priority-${taskId}`);
+                        taskBox.remove();
+                    }
+                });
+            }
+
+            function createNewTask(taskId, name, priority) {
+                const newTaskBox = document.createElement('div');
+                newTaskBox.classList.add('task-box');
+                newTaskBox.dataset.taskId = taskId;
+
+                const priorityColor = getPriorityColor(priority);
+                const priorityClass = getPriorityClass(priority);
+
+                // Asigna el color del borde y de los elementos internos
+                newTaskBox.style.borderTopColor = priorityColor;
+                
+                newTaskBox.innerHTML = `
+                    <button class="delete-button">&times;</button>
+                    <span class="task-name" style="color: ${priorityColor};">${name}</span>
+                    <span class="priority ${priorityClass}">Prioridad: ${priority}</span>
+                `;
+                taskContainer.appendChild(newTaskBox);
+                setupTaskEvents(newTaskBox);
+            }
+
+            function loadSavedTasks() {
+                const keys = Object.keys(localStorage).filter(key => key.startsWith('task-name-'));
+                
+                keys.forEach(key => {
+                    const taskId = key.split('-')[2];
+                    const name = localStorage.getItem(key);
+                    const priority = localStorage.getItem(`task-priority-${taskId}`);
+                    createNewTask(taskId, name, priority);
+                    nextTaskId = Math.max(nextTaskId, parseInt(taskId) + 1);
+                });
+            }
+
+            createTaskButton.addEventListener('click', () => {
+                const newName = prompt('Ingresa el nombre de la nueva tarea:');
+                if (newName) {
+                    let newPriority = prompt('Ingresa la prioridad (baja, media, alta):');
+                    newPriority = newPriority ? newPriority.toLowerCase() : 'baja';
+                    const newId = nextTaskId++;
+                    createNewTask(newId, newName, newPriority);
+                    localStorage.setItem(`task-name-${newId}`, newName);
+                    localStorage.setItem(`task-priority-${newId}`, newPriority);
+                }
+            });
+
+            // --- Funciones del Modal de Configuración ---
+            function loadNotificationTimes() {
+                const times = JSON.parse(localStorage.getItem('notificationTimes')) || [];
+                notificationList.innerHTML = '';
+                times.sort().forEach(time => {
+                    const li = document.createElement('li');
+                    li.classList.add('notification-item');
+                    li.innerHTML = `
+                        <span>${time}</span>
+                        <span class="remove-time" data-time="${time}">&times;</span>
+                    `;
+                    notificationList.appendChild(li);
+                });
+            }
+
+            function saveNotificationTimes() {
+                const times = [];
+                document.querySelectorAll('.notification-item span:first-child').forEach(span => {
+                    times.push(span.textContent);
+                });
+                localStorage.setItem('notificationTimes', JSON.stringify(times));
+            }
+
+            configButton.addEventListener('click', () => {
+                configModal.style.display = 'flex';
+                loadNotificationTimes();
+            });
+
+            closeModalButton.addEventListener('click', () => {
+                configModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === configModal) {
+                    configModal.style.display = 'none';
+                }
+            });
+
+            addTimeButton.addEventListener('click', () => {
+                const time = timeInput.value;
+                if (time && !document.querySelector(`[data-time="${time}"]`)) {
+                    const li = document.createElement('li');
+                    li.classList.add('notification-item');
+                    li.innerHTML = `
+                        <span>${time}</span>
+                        <span class="remove-time" data-time="${time}">&times;</span>
+                    `;
+                    notificationList.appendChild(li);
+                    saveNotificationTimes();
+                    timeInput.value = '';
+                }
+            });
+
+            notificationList.addEventListener('click', (event) => {
+                if (event.target.classList.contains('remove-time')) {
+                    event.target.closest('li').remove();
+                    saveNotificationTimes();
+                }
+            });
+
+            // --- Sistema de Notificaciones Programadas ---
+            function checkNotifications() {
+                const times = JSON.parse(localStorage.getItem('notificationTimes')) || [];
+                const now = new Date();
+                const currentTime = now.toTimeString().slice(0, 5);
+                const currentDate = now.toDateString();
+
+                if (times.includes(currentTime)) {
+                    const notifiedKey = `notified-${currentTime}-${currentDate}`;
+                    if (!localStorage.getItem(notifiedKey)) {
+                        const tasks = Object.keys(localStorage)
+                            .filter(key => key.startsWith('task-name-'))
+                            .map(key => localStorage.getItem(key));
+                        
+                        const taskList = tasks.length > 0 ? `Tus tareas pendientes: ${tasks.join(', ')}` : 'No tienes tareas pendientes.';
+                        
+                        sendNotification('¡Hora de revisar tus tareas!', taskList);
+                        localStorage.setItem(notifiedKey, 'true');
+                        console.log('Notificación enviada para: ' + currentTime);
+                    }
+                }
+            }
+
+            function clearDailyNotifications() {
+                const today = new Date().toDateString();
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('notified-') && !key.endsWith(today)) {
+                        localStorage.removeItem(key);
+                    }
+                });
+            }
+            
+            // Revisa las notificaciones cada minuto
+            setInterval(checkNotifications, 60000); 
+            // Limpia las notificaciones diarias cada hora (para que el día siguiente se vuelvan a activar)
+            setInterval(clearDailyNotifications, 3600000); 
+            
+            // --- Carga Inicial ---
+            requestNotificationPermission();
+            loadSavedCounters();
+            loadSavedTasks();
+            clearDailyNotifications(); // Asegura que las notificaciones del día anterior se limpien al cargar la página
+        });
+    </script>
+</body>
+</html>
